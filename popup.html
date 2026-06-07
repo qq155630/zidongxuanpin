@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; 
+                 style-src 'self' 'unsafe-inline';
+                 script-src 'self';
+                 img-src 'self' data:;" />
+  <title>超维 ERP</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+  <div class="popup-container" role="main">
+
+    <!-- Logo -->
+    <div class="logo" aria-label="超维ERP">
+      <h1>🤖 超维 ERP</h1>
+      <p>AI自动上品 · 1688 → Ozon</p>
+    </div>
+
+    <!-- 加载中 -->
+    <div 
+      id="loadingState" 
+      class="loading-state active"
+      role="status"
+      aria-live="polite"
+      aria-label="正在加载">
+      <div class="spinner" aria-hidden="true"></div>
+      <span>加载中...</span>
+    </div>
+
+    <!-- 登录后显示 -->
+    <div 
+      id="userInfo" 
+      class="user-info"
+      role="region"
+      aria-label="用户信息"
+      aria-hidden="true">
+      <div class="user-header">
+        <span class="user-avatar" aria-hidden="true">👤</span>
+        <div class="user-details">
+          <div class="name">
+            ✅ <span id="userName">用户</span>
+          </div>
+          <div 
+            class="role" 
+            id="userRole"
+            aria-label="用户角色">
+          </div>
+        </div>
+        <!-- 登出按钮 -->
+        <button 
+          id="logoutBtn"
+          class="btn-logout"
+          aria-label="退出登录"
+          title="退出登录">
+          🚪
+        </button>
+      </div>
+    </div>
+
+    <!-- 未登录显示 -->
+    <div 
+      id="notLogged" 
+      class="not-logged"
+      role="alert"
+      aria-live="polite">
+      <span aria-hidden="true">🔐</span>
+      请先登录后使用
+    </div>
+
+    <!-- 错误提示 -->
+    <div 
+      id="errorAlert"
+      class="alert alert-error"
+      role="alert"
+      aria-live="assertive">
+    </div>
+
+    <!-- 快速操作区域 -->
+    <div class="quick-actions">
+      <!-- 主按钮：打开管理后台 -->
+      <button
+        class="btn btn-primary"
+        id="goWebsite"
+        aria-label="打开超维ERP管理后台">
+        📊 打开管理后台
+      </button>
+
+      <!-- 登录后才显示的功能按钮 -->
+      <div 
+        id="loggedActions" 
+        class="action-buttons"
+        style="display: none;">
+        <button
+          class="btn btn-secondary"
+          id="go1688"
+          aria-label="前往1688">
+          🛒 去1688选品
+        </button>
+        <button
+          class="btn btn-secondary"
+          id="goHistory"
+          aria-label="查看上品记录">
+          📋 上品记录
+        </button>
+      </div>
+    </div>
+
+    <!-- 分隔线 -->
+    <div class="divider" role="separator" aria-hidden="true"></div>
+
+    <!-- 提示信息 -->
+    <div 
+      class="tip"
+      role="note"
+      aria-label="使用提示">
+      在 1688 商品页点击右侧<br />
+      「🤖 AI上品」按钮开始上品
+    </div>
+
+  </div>
+
+  <!-- 脚本放在底部 -->
+  <script src="popup.js"></script>
+</body>
+</html>

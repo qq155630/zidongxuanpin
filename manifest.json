@@ -1,0 +1,74 @@
+{
+  "manifest_version": 3,
+  "name": "超维 ERP - AI自动上品",
+  "version": "8.1.0",
+  "description": "1688商品一键AI上架到Ozon - AI翻译+生成图片+自动定价",
+  "permissions": [
+    "storage",
+    "scripting",
+    "alarms",
+    "tabs"
+  ],
+  "optional_permissions": ["cookies"],
+  "host_permissions": [
+    "https://api.ozonerp.chaowei.online/*",
+    "https://ozonerp.chaowei.online/*",
+    "https://seller.ozon.ru/*",
+    "https://www.ozon.ru/*",
+    "https://api-seller.ozon.ru/*",
+    "https://payment-seller.ozon.ru/*",
+    "https://detail.1688.com/*",
+    "https://s.1688.com/*",
+    "https://search.1688.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*.1688.com/*",
+    "https://*.ozon.ru/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://ozonerp.chaowei.online/*"],
+      "js": ["scripts/content_bridge.js"],
+      "run_at": "document_end",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://detail.1688.com/*",
+        "https://s.1688.com/selloffer/offer_search*"
+      ],
+      "js": ["scripts/content_1688.js"],
+      "css": ["styles/content_1688.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "action": {
+    "default_title": "超维 ERP - AI自动上品系统 v8.1",
+    "default_popup": "popup.html",
+    "default_icons": {
+      "16": "images/icon-16.png",
+      "24": "images/icon-24.png",
+      "32": "images/icon-32.png",
+      "48": "images/icon-48.png",
+      "96": "images/icon-96.png",
+      "128": "images/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "images/icon-16.png",
+    "24": "images/icon-24.png",
+    "32": "images/icon-32.png",
+    "48": "images/icon-48.png",
+    "96": "images/icon-96.png",
+    "128": "images/icon-128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'self'; font-src 'self' https://fonts.gstatic.com; connect-src https://*"
+  },
+  "homepage_url": "https://ozonerp.chaowei.online",
+  "author": "ChaoWei"
+}

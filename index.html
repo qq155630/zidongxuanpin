@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>超维 ERP - AI自动上品管理系统</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f7fa; color: #333; }
+    .hidden { display: none !important; }
+    .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea, #764ba2); padding: 20px; }
+    .login-box { width: 400px; background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); padding: 36px 32px; }
+    .login-box .logo { text-align: center; margin-bottom: 28px; }
+    .login-box .logo h1 { font-size: 28px; color: #667eea; margin-bottom: 6px; }
+    .login-box .logo p { font-size: 13px; color: #999; }
+    .login-tabs { display: flex; border-bottom: 1px solid #f0f0f0; margin-bottom: 24px; }
+    .login-tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-size: 14px; color: #666; border-bottom: 2px solid transparent; transition: all .2s; }
+    .login-tab.active { color: #667eea; font-weight: bold; border-bottom-color: #667eea; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+    .form-group input { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 11px 14px; font-size: 14px; outline: none; transition: border .2s; }
+    .form-group input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.1); }
+    .btn { border: none; border-radius: 8px; padding: 11px 16px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all .2s; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+    .btn-primary:hover:not(:disabled) { opacity: 0.9; }
+    .btn-danger { background: #ff4d4f; color: #fff; }
+    .btn-default { background: #f0f0f0; color: #333; }
+    .btn-full { width: 100%; padding: 13px; font-size: 15px; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .alert { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
+    .alert-error { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+    .alert-success { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+    .alert-info { background: #e6f4ff; color: #1677ff; border: 1px solid #91caff; }
+    .alert-warning { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
+    .main-layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; background: #1a1a2e; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-logo { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .sidebar-logo h1 { font-size: 18px; font-weight: bold; background: linear-gradient(135deg, #a78bfa, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .sidebar-logo p { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 4px; }
+    .sidebar-menu { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .menu-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; cursor: pointer; color: rgba(255,255,255,.6); font-size: 14px; transition: all .2s; border-left: 3px solid transparent; }
+    .menu-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+    .menu-item.active { background: rgba(102,126,234,.2); color: #a78bfa; border-left-color: #a78bfa; }
+    .menu-item .icon { font-size: 16px; flex-shrink: 0; }
+    .sidebar-user { padding: 16px; border-top: 1px solid rgba(255,255,255,.08); }
+    .sidebar-user .name { color: #fff; font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+    .sidebar-user .role { font-size: 11px; color: rgba(255,255,255,.4); margin-bottom: 10px; }
+    .sidebar-user .logout { font-size: 12px; color: #a78bfa; cursor: pointer; }
+    .sidebar-user .logout:hover { color: #fff; }
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .page-header { background: #fff; border-bottom: 1px solid #f0f0f0; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .page-header h2 { font-size: 20px; color: #333; }
+    .page-body { flex: 1; padding: 24px; overflow-y: auto; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.05); margin-bottom: 16px; }
+    .card-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; color: #333; display: flex; align-items: center; gap: 8px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+    .stat-card .label { font-size: 13px; color: #999; margin-bottom: 8px; }
+    .stat-card .value { font-size: 32px; font-weight: bold; color: #667eea; }
+    .stat-card .sub { font-size: 12px; color: #999; margin-top: 4px; }
+    .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #f0f0f0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #fafafa; color: #666; text-align: left; padding: 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; font-weight: 600; }
+    td { padding: 12px; border-bottom: 1px solid #f5f5f5; white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafffe; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .tag-success { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+    .tag-error { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+    .tag-loading { background: #e6f4ff; color: #1677ff; border: 1px solid #91caff; }
+    .tag-warning { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
+    .tag-admin { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+    .tag-user { background: #f0f5ff; color: #667eea; border: 1px solid #c7d2fe; }
+    .task-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: box-shadow .2s; }
+    .task-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .task-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .task-title { font-size: 14px; font-weight: 600; color: #333; line-height: 1.4; flex: 1; margin-right: 12px; }
+    .task-steps { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+    .task-step { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #f5f5f5; color: #999; }
+    .task-step.done { background: #f6ffed; color: #52c41a; }
+    .task-step.active { background: #e6f4ff; color: #1677ff; }
+    .task-step.error { background: #fff2f0; color: #ff4d4f; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .empty { text-align: center; padding: 60px 20px; color: #999; }
+    .empty .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty p { font-size: 14px; }
+    .progress-bar { height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .progress-bar .fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 3px; transition: width .3s; }
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-row { grid-template-columns: 1fr; }
+      .form-row-3 { grid-template-columns: 1fr; }
+      .sidebar { width: 60px; }
+      .sidebar .menu-item span.txt { display: none; }
+      .sidebar-logo p, .sidebar-user .name, .sidebar-user .role, .sidebar-user .logout { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <div class="logo">
+      <h1>🤖 超维 ERP</h1>
+      <p>AI自动上品 · 1688 → Ozon</p>
+    </div>
+    <div class="login-tabs">
+      <div class="login-tab active" onclick="switchTab('login')">登录</div>
+      <div class="login-tab" onclick="switchTab('register')">注册</div>
+    </div>
+    <div id="loginForm">
+      <div class="form-group"><label>用户名</label><input type="text" id="loginUser" placeholder="请输入用户名" autocomplete="username" /></div>
+      <div class="form-group"><label>密码</label><input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password" /></div>
+      <div id="loginAlert"></div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">登录</button>
+    </div>
+    <div id="registerForm" class="hidden">
+      <div class="form-group"><label>用户名</label><input type="text" id="regUser" placeholder="请输入用户名" autocomplete="username" /></div>
+      <div class="form-group"><label>密码</label><input type="password" id="regPass" placeholder="至少6位" autocomplete="new-password" /></div>
+      <div class="form-group"><label>邀请码</label><input type="text" id="regCode" placeholder="没有可不填" /></div>
+      <div id="regAlert"></div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()">注册</button>
+    </div>
+  </div>
+</div>
+
+<div id="mainLayout" class="main-layout hidden">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h1>超维ERP</h1>
+      <p>AI自动上品系统</p>
+    </div>
+    <div class="sidebar-menu">
+      <div class="menu-item active" onclick="switchPage('dashboard')"><span class="icon">📊</span><span class="txt">数据概览</span></div>
+      <div class="menu-item" onclick="switchPage('tasks')"><span class="icon">🤖</span><span class="txt">上品任务</span></div>
+      <div class="menu-item" onclick="switchPage('history')"><span class="icon">📋</span><span class="txt">上品记录</span></div>
+      <div class="menu-item" onclick="switchPage('stores')"><span class="icon">🏪</span><span class="txt">店铺管理</span></div>
+      <div class="menu-item" onclick="switchPage('watermark')"><span class="icon">🎨</span><span class="txt">水印配置</span></div>
+      <div class="menu-item" onclick="switchPage('imagetools')"><span class="icon">🖼️</span><span class="txt">图片管理</span></div>
+      <div class="menu-item hidden" id="adminMenu" onclick="switchPage('admin')"><span class="icon">👥</span><span class="txt">用户管理</span></div>
+      <div class="menu-item" onclick="switchPage('autopick')"><span class="icon">🎯</span><span class="txt">自动选品</span></div>
+      <div class="menu-item" onclick="switchPage('download')"><span class="icon">📦</span><span class="txt">下载插件</span></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="name" id="sidebarName">-</div>
+      <div class="role" id="sidebarRole"></div>
+      <div class="logout" onclick="doLogout()">退出登录</div>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="page-header">
+      <h2 id="pageTitle">📊 数据概览</h2>
+      <div id="pageActions"></div>
+    </div>
+    <div class="page-body" id="pageBody"></div>
+  </div>
+</div>
+
+<script>
+var API_URL = "https://api.ozonerp.chaowei.online";
+var currentToken = localStorage.getItem("erp_token");
+var currentUser = null;
+var taskPollingTimer = null;
+
+var _pendingBridgeCallbacks = {};
+var _bridgeCallbackId = 0;
+
+function sendToExtension(msg, callback) {
+  var cbId = "_cb_" + (++_bridgeCallbackId) + "_" + Date.now();
+  msg._bridgeCallbackId = cbId;
+  if (callback) {
+    _pendingBridgeCallbacks[cbId] = callback;
+    setTimeout(function() { delete _pendingBridgeCallbacks[cbId]; }, 30000);
+  }
+  window.postMessage({ source: "erp-web", type: "erp-bridge-call", payload: msg }, "*");
+}
+
+window.addEventListener("message", function(e) {
+  if (!e.data || e.data.source !== "erp-extension") return;
+  if (e.data.type === "erp-bridge-response" && e.data._bridgeCallbackId) {
+    var cb = _pendingBridgeCallbacks[e.data._bridgeCallbackId];
+    if (cb) {
+      delete _pendingBridgeCallbacks[e.data._bridgeCallbackId];
+      cb(e.data.result);
+    }
+    return;
+  }
+  if (e.data.type === "erp-extension-ready") {
+    if (currentToken) {
+      window.postMessage({ source: "erp-web", type: "erp-login", token: currentToken, user: currentUser }, "*");
+    } else {
+      window.postMessage({ source: "erp-web", type: "erp-check-auth" }, "*");
+    }
+  }
+  if (e.data.type === "erp-auth-status" && e.data.loggedIn && e.data.token && !currentToken) {
+    currentToken = e.data.token;
+    localStorage.setItem("erp_token", currentToken);
+    loadUser().then(function() { if (currentUser) showMain(); });
+  }
+});
+
+function api(path, options) {
+  options = options || {};
+  var headers = { "Content-Type": "application/json" };
+  if (currentToken) headers["Authorization"] = "Bearer " + currentToken;
+  return fetch(API_URL + path, {
+    method: options.method || "GET",
+    headers: headers,
+    body: options.body ? JSON.stringify(options.body) : undefined
+  }).then(function(r) { return r.json(); });
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function switchTab(tab) {
+  document.querySelectorAll(".login-tab").forEach(function(t, i) {
+    t.classList.toggle("active", (tab === "login" && i === 0) || (tab === "register" && i === 1));
+  });
+  document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
+  document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
+}
+
+function doLogin() {
+  var u = document.getElementById("loginUser").value.trim();
+  var p = document.getElementById("loginPass").value.trim();
+  var a = document.getElementById("loginAlert");
+  if (!u || !p) { a.innerHTML = '<div class="alert alert-error">请填写用户名和密码</div>'; return; }
+  a.innerHTML = '<div class="alert alert-info">登录中...</div>';
+  fetch(API_URL + "/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: u, password: p })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.code === 0) {
+      currentToken = d.data.token;
+      localStorage.setItem("erp_token", currentToken);
+      try { window.postMessage({ source: "erp-web", type: "erp-login", token: d.data.token, user: d.data.user }, "*"); } catch(e) {}
+      loadUser().then(function() { showMain(); });
+    } else {
+      a.innerHTML = '<div class="alert alert-error">' + escapeHtml(d.msg || "登录失败") + '</div>';
+    }
+  });
+}
+
+function doRegister() {
+  var u = document.getElementById("regUser").value.trim();
+  var p = document.getElementById("regPass").value.trim();
+  var c = document.getElementById("regCode").value.trim();
+  var a = document.getElementById("regAlert");
+  if (!u || !p) { a.innerHTML = '<div class="alert alert-error">请填写用户名和密码</div>'; return; }
+  if (p.length < 6) { a.innerHTML = '<div class="alert alert-error">密码至少6位</div>'; return; }
+  a.innerHTML = '<div class="alert alert-info">注册中...</div>';
+  fetch(API_URL + "/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: u, password: p, inviteCode: c })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.code === 0) {
+      a.innerHTML = '<div class="alert alert-success">注册成功！</div>';
+      setTimeout(function() { switchTab("login"); }, 1000);
+    } else {
+      a.innerHTML = '<div class="alert alert-error">' + escapeHtml(d.msg || "注册失败") + '</div>';
+    }
+  });
+}
+
+function doLogout() {
+  localStorage.removeItem("erp_token");
+  currentToken = null;
+  currentUser = null;
+  try { window.postMessage({ source: "erp-web", type: "erp-logout" }, "*"); } catch(e) {}
+  document.getElementById("mainLayout").classList.add("hidden");
+  document.getElementById("loginPage").classList.remove("hidden");
+  if (taskPollingTimer) { clearInterval(taskPollingTimer); taskPollingTimer = null; }
+  if (window._autoPickPollingTimer) { clearInterval(window._autoPickPollingTimer); window._autoPickPollingTimer = null; }
+}
+
+function loadUser() {
+  return api("/auth/me").then(function(d) {
+    if (d.code !== 0) { doLogout(); return; }
+    currentUser = d.data;
+    document.getElementById("sidebarName").textContent = currentUser.username;
+    document.getElementById("sidebarRole").innerHTML = currentUser.role === "admin"
+      ? '<span class="tag tag-admin">管理员</span>'
+      : '<span class="tag tag-user">用户</span>';
+    document.getElementById("adminMenu").classList.toggle("hidden", currentUser.role !== "admin");
+  });
+}
+
+function showMain() {
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("mainLayout").classList.remove("hidden");
+  switchPage("dashboard");
+}
+
+function switchPage(page) {
+  document.querySelectorAll(".menu-item").forEach(function(el) { el.classList.remove("active"); });
+  var activeItem = document.querySelector('.menu-item[onclick="switchPage(\'' + page + '\')"]');
+  if (activeItem) activeItem.classList.add("active");
+  var titles = {
+    dashboard: "📊 数据概览", tasks: "🤖 上品任务", history: "📋 上品记录",
+    stores: "🏪 店铺管理", watermark: "🎨 水印配置", imagetools: "🖼️ 图片管理",
+    admin: "👥 用户管理", download: "📦 下载插件", autopick: "🎯 自动选品"
+  };
+  document.getElementById("pageTitle").textContent = titles[page] || page;
+  document.getElementById("pageActions").innerHTML = "";
+  if (taskPollingTimer) { clearInterval(taskPollingTimer); taskPollingTimer = null; }
+  if (window._autoPickPollingTimer) { clearInterval(window._autoPickPollingTimer); window._autoPickPollingTimer = null; }
+  if (page === "dashboard") renderDashboard();
+  else if (page === "tasks") renderTasks();
+  else if (page === "history") renderHistory();
+  else if (page === "stores") renderStores();
+  else if (page === "watermark") renderWatermark();
+  else if (page === "imagetools") renderImageTools();
+  else if (page === "admin") renderAdmin();
+  else if (page === "download") renderDownload();
+  else if (page === "autopick") renderAutoPick();
+}
+
+function statusTag(status) {
+  var map = {
+    "completed": '<span class="tag tag-success">✅ 成功</span>',
+    "failed": '<span class="tag tag-error">❌ 失败</span>',
+    "loading": '<span class="tag tag-loading">⏳ 处理中</span>',
+    "error": '<span class="tag tag-error">❌ 错误</span>',
+    "done": '<span class="tag tag-success">✅ 完成</span>'
+  };
+  return map[status] || '<span class="tag tag-warning">⏳ ' + escapeHtml(status || "未知") + '</span>';
+}
+
+function renderDashboard() {
+  var body = document.getElementById("pageBody");
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">加载中...</div>';
+  Promise.all([api("/erp/history"), api("/user/stores")]).then(function(results) {
+    var history = results[0].data || [];
+    var stores = results[1].data || [];
+    var today = new Date().toISOString().slice(0, 10);
+    var todayCount = history.filter(function(h) { return (h.createdAt || "").startsWith(today); }).length;
+    var successCount = history.filter(function(h) { return h.status === "completed"; }).length;
+    var failCount = history.filter(function(h) { return h.status === "failed"; }).length;
+    body.innerHTML = '<div class="stats-grid"><div class="stat-card"><div class="label">今日上品</div><div class="value">' + todayCount + '</div><div class="sub">件商品</div></div><div class="stat-card"><div class="label">总上品数</div><div class="value">' + history.length + '</div><div class="sub">成功 ' + successCount + ' 件</div></div><div class="stat-card"><div class="label">失败数量</div><div class="value" style="color:#ff4d4f;">' + failCount + '</div><div class="sub">需要处理</div></div><div class="stat-card"><div class="label">店铺数量</div><div class="value">' + stores.length + '</div><div class="sub">最多15个</div></div></div><div class="card"><div class="card-title">📋 最近上品记录</div>' + (history.length === 0 ? '<div class="empty"><div class="icon">📭</div><p>暂无记录</p></div>' : '<div class="table-wrap"><table><thead><tr><th>商品标题</th><th>店铺</th><th>价格</th><th>状态</th><th>来源</th><th>时间</th></tr></thead><tbody>' + history.slice(0, 8).map(function(i) { return '<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(i.title || i.offerId || "-") + '</td><td>' + escapeHtml(i.storeName || "-") + '</td><td>' + (i.price ? "¥" + i.price : "-") + '</td><td>' + statusTag(i.status) + '</td><td>' + (i.source === "1688" ? "🛒 1688" : "📦 其他") + '</td><td>' + (i.createdAt || "").replace("T", " ").slice(0, 16) + '</td></tr>'; }).join("") + '</tbody></table></div>') + '</div><div class="card"><div class="card-title">💡 使用说明</div><div class="alert alert-info" style="line-height:2;">① 安装插件 → ② 打开 1688 商品页 → ③ 点击右侧「🤖 AI上品」按钮<br>→ ④ 选择店铺和价格倍数 → ⑤ 点击开始 → ⑥ 全自动处理（AI翻译+生成图片+上传Ozon）<br>→ ⑦ 在此页面查看进度和结果</div></div>';
+  });
+}
+
+function renderTasks() {
+  var body = document.getElementById("pageBody");
+  body.innerHTML = '<div class="card"><div class="card-title">🤖 实时上品任务</div><div class="alert alert-info" style="margin-bottom:16px;">任务每5秒自动刷新，完成后自动停止</div><div class="toolbar"><button class="btn btn-default btn-sm" onclick="renderTasks()">🔄 刷新</button></div><div id="task-list"><div style="text-align:center;padding:30px;color:#999;">⏳ 加载中...</div></div></div>';
+  loadTasks();
+  if (taskPollingTimer) clearInterval(taskPollingTimer);
+  taskPollingTimer = setInterval(loadTasks, 5000);
+}
+
+function loadTasks() {
+  api("/erp/history").then(function(d) {
+    var el = document.getElementById("task-list");
+    if (!el) { clearInterval(taskPollingTimer); return; }
+    var tasks = (d.data || []).filter(function(t) { return t.source === "1688" || t.taskId; });
+    if (tasks.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="icon">🤖</div><p>暂无任务<br><span style="font-size:12px;">在1688商品页点击「AI上品」按钮开始</span></p></div>';
+      return;
+    }
+    var stepLabels = { scrape: "抓取数据", weight: "获取重量", ai: "AI处理", image: "生成图片", upload: "上传Ozon", done: "完成" };
+    el.innerHTML = tasks.slice(0, 20).map(function(t) {
+      var stepsArr = ["scrape", "weight", "ai", "image", "upload", "done"];
+      var currentIdx = stepsArr.indexOf(t.step || "done");
+      return '<div class="task-card"><div class="task-header"><div class="task-title">' + escapeHtml(t.title || t.offerId || "商品处理中...") + '</div>' + statusTag(t.status) + '</div><div style="font-size:12px;color:#999;margin-bottom:8px;">店铺：' + escapeHtml(t.storeName || "-") + ' · ' + (t.createdAt || "").replace("T", " ").slice(0, 16) + '</div>' + (t.message ? '<div style="font-size:12px;color:#667eea;margin-bottom:8px;">💬 ' + escapeHtml(t.message) + '</div>' : "") + '<div class="task-steps">' + stepsArr.map(function(s, i) { var cls = "task-step"; if (i < currentIdx) cls += " done"; else if (i === currentIdx) cls += (t.status === "error" ? " error" : " active"); return '<span class="' + cls + '">' + (i < currentIdx ? "✅ " : (i === currentIdx ? (t.status === "error" ? "❌ " : "⏳ ") : "⬜ ")) + stepLabels[s] + '</span>'; }).join("") + '</div>' + (t.status === "loading" ? '<div class="progress-bar"><div class="fill" style="width:' + (((currentIdx + 1) / 6) * 100) + '%"></div></div>' : "") + '</div>';
+    }).join("");
+  });
+}
+
+function renderHistory() {
+  var body = document.getElementById("pageBody");
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">加载中...</div>';
+  api("/erp/history").then(function(d) {
+    var history = d.data || [];
+    body.innerHTML = '<div class="card"><div class="card-title">📋 上品记录（共' + history.length + '条）</div><div class="toolbar"><button class="btn btn-default btn-sm" onclick="renderHistory()">🔄 刷新</button></div>' + (history.length === 0 ? '<div class="empty"><div class="icon">📭</div><p>暂无记录</p></div>' : '<div class="table-wrap"><table><thead><tr><th>商品标题</th><th>1688 ID</th><th>店铺</th><th>Offer ID</th><th>价格</th><th>图片</th><th>状态</th><th>来源</th><th>时间</th></tr></thead><tbody>' + history.map(function(i) { return '<tr><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;" title="' + escapeHtml(i.title || "") + '">' + escapeHtml(i.title || "-") + '</td><td>' + escapeHtml(i.sku || "-") + '</td><td>' + escapeHtml(i.storeName || "-") + '</td><td style="font-size:11px;color:#999;">' + escapeHtml(i.offerId || "-") + '</td><td>' + (i.price ? "¥" + i.price : "-") + '</td><td>' + (i.imageUploaded ? "✅" + (i.uploadedCount || "") : (i.status === "completed" ? "✅" : "-")) + '</td><td>' + statusTag(i.status) + '</td><td>' + (i.source === "1688" ? "🛒 1688" : "📦 其他") + '</td><td>' + (i.createdAt || "").replace("T", " ").slice(0, 16) + '</td></tr>'; }).join("") + '</tbody></table></div>') + '</div>';
+  });
+}
+
+function renderStores() {
+  var body = document.getElementById("pageBody");
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">加载中...</div>';
+  api("/user/stores").then(function(d) {
+    var stores = d.data || [];
+    window._storeList = stores;
+    body.innerHTML = '<div class="card"><div class="card-title">🏪 店铺管理</div><div class="alert alert-info" style="margin-bottom:16px;font-size:12px;">最多15个店铺。需要 Ozon 卖家后台的 Client ID 和 API Key（Admin类型）。</div>' + (stores.length === 0 ? '<div class="empty"><div class="icon">🏪</div><p>还没有店铺</p></div>' : '<div class="table-wrap"><table><thead><tr><th>店铺名称</th><th>Client ID</th><th>API Key</th><th>添加时间</th><th>操作</th></tr></thead><tbody>' + stores.map(function(s) { return '<tr><td><b>' + escapeHtml(s.name) + '</b></td><td style="font-family:monospace;font-size:12px;">' + escapeHtml(s.clientId) + '</td><td>' + (s.hasApiKey ? '<span class="tag tag-success">✅ 已配置</span>' : '<span class="tag tag-error">❌ 未配置</span>') + '</td><td style="font-size:12px;color:#999;">' + (s.createdAt || "").slice(0, 10) + '</td><td><button class="btn btn-sm btn-default" style="margin-right:4px;" onclick="editStore(\'' + s.id + '\')">✏️ 编辑</button><button class="btn btn-sm btn-danger" onclick="deleteStore(\'' + s.id + '\',\'' + escapeHtml(s.name) + '\')">🗑️</button></td></tr>'; }).join("") + '</tbody></table></div>') + '<div style="margin-top:16px;display:flex;align-items:center;gap:12px;"><button class="btn btn-primary" onclick="editStore(\'\')" ' + (stores.length >= 15 ? "disabled" : "") + '>➕ 添加店铺</button><span style="font-size:12px;color:#999;">' + stores.length + '/15</span></div></div><div id="storeEditArea" class="card hidden"><div class="card-title" id="storeEditTitle">添加店铺</div><input type="hidden" id="storeEditId" /><div class="form-row"><div class="form-group"><label>店铺名称</label><input type="text" id="storeName" placeholder="自定义备注名" /></div><div class="form-group"><label>Client ID</label><input type="text" id="storeClientId" placeholder="Ozon Client ID" /></div></div><div class="form-group"><label>API Key</label><input type="password" id="storeApiKey" placeholder="Ozon API Key（Admin类型）" /></div><div id="storeAlert" style="margin-top:8px;"></div><div style="display:flex;gap:8px;margin-top:16px;"><button class="btn btn-primary" onclick="saveStore()">💾 保存</button><button class="btn btn-default" onclick="document.getElementById(\'storeEditArea\').classList.add(\'hidden\')">取消</button></div></div><div class="card"><div class="card-title">🔒 修改密码</div><div class="form-row"><div class="form-group"><label>原密码</label><input type="password" id="oldPwd" /></div><div class="form-group"><label>新密码</label><input type="password" id="newPwd" placeholder="至少6位" /></div></div><div id="pwdAlert" style="margin-top:8px;"></div><button class="btn btn-default" onclick="changePassword()" style="margin-top:8px;">🔒 修改密码</button></div>';
+  });
+}
+
+function editStore(id) {
+  document.getElementById("storeEditArea").classList.remove("hidden");
+  document.getElementById("storeEditId").value = id;
+  if (id && window._storeList) {
+    var s = window._storeList.find(function(x) { return x.id === id; });
+    if (s) {
+      document.getElementById("storeEditTitle").textContent = "✏️ 编辑店铺";
+      document.getElementById("storeName").value = s.name;
+      document.getElementById("storeClientId").value = s.clientId;
+      document.getElementById("storeApiKey").value = "";
+      document.getElementById("storeApiKey").placeholder = "不修改请留空";
+    }
+  } else {
+    document.getElementById("storeEditTitle").textContent = "➕ 添加店铺";
+    document.getElementById("storeName").value = "";
+    document.getElementById("storeClientId").value = "";
+    document.getElementById("storeApiKey").value = "";
+    document.getElementById("storeApiKey").placeholder = "Ozon API Key（Admin类型）";
+  }
+  document.getElementById("storeAlert").innerHTML = "";
+}
+
+function saveStore() {
+  var id = document.getElementById("storeEditId").value;
+  var name = document.getElementById("storeName").value.trim();
+  var clientId = document.getElementById("storeClientId").value.trim();
+  var apiKey = document.getElementById("storeApiKey").value.trim();
+  var a = document.getElementById("storeAlert");
+  if (!name || !clientId) { a.innerHTML = '<div class="alert alert-error">名称和Client ID必填</div>'; return; }
+  if (!id && !apiKey) { a.innerHTML = '<div class="alert alert-error">API Key必填</div>'; return; }
+  a.innerHTML = '<div class="alert alert-info">保存中...</div>';
+  var reqBody = { name: name, clientId: clientId };
+  if (id) { reqBody.id = id; reqBody.apiKey = apiKey || "KEEP"; }
+  else { reqBody.apiKey = apiKey; }
+  api("/user/stores/save", { method: "POST", body: reqBody }).then(function(r) {
+    if (r.code === 0) { a.innerHTML = '<div class="alert alert-success">✅ 保存成功</div>'; setTimeout(renderStores, 500); }
+    else { a.innerHTML = '<div class="alert alert-error">❌ ' + escapeHtml(r.msg) + '</div>'; }
+  });
+}
+
+function deleteStore(id, name) {
+  if (!confirm("确定删除店铺「" + name + "」？")) return;
+  api("/user/stores/delete", { method: "POST", body: { id: id } }).then(function(r) {
+    if (r.code === 0) renderStores();
+  });
+}
+
+function changePassword() {
+  var op = document.getElementById("oldPwd").value.trim();
+  var np = document.getElementById("newPwd").value.trim();
+  var a = document.getElementById("pwdAlert");
+  if (!op || !np) { a.innerHTML = '<div class="alert alert-error">请填写密码</div>'; return; }
+  if (np.length < 6) { a.innerHTML = '<div class="alert alert-error">新密码至少6位</div>'; return; }
+  api("/user/update-password", { method: "POST", body: { oldPassword: op, newPassword: np } }).then(function(d) {
+    a.innerHTML = d.code === 0 ? '<div class="alert alert-success">✅ 修改成功</div>' : '<div class="alert alert-error">❌ ' + escapeHtml(d.msg) + '</div>';
+  });
+}
+
+function renderWatermark() {
+  var body = document.getElementById("pageBody");
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">加载中...</div>';
+  api("/user/watermark").then(function(d) {
+    var wms = (d.data && d.data.watermarks) || [];
+    window._wmList = wms;
+    body.innerHTML = '<div class="card"><div class="card-title">🎨 水印管理</div><div class="alert alert-info" style="margin-bottom:16px;font-size:12px;">上品时自动给商品图片添加水印。</div>' + (wms.length === 0 ? '<div class="empty"><div class="icon">🎨</div><p>还没有水印</p></div>' : '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">' + wms.map(function(wm, idx) { return '<div style="background:#f8f9fb;border:1px solid #e2e8f0;border-radius:10px;padding:12px;"><div style="font-weight:bold;color:#667eea;margin-bottom:8px;">' + escapeHtml(wm.name || ("水印" + (idx + 1))) + '</div>' + (wm.imageBase64 ? '<img src="' + wm.imageBase64 + '" style="max-height:40px;border-radius:4px;margin-bottom:8px;" />' : "") + '<div style="font-size:11px;color:#666;">位置: ' + (wm.position || "-") + ' | 大小: ' + (wm.size || 15) + '% | 透明度: ' + (wm.opacity || 60) + '%</div><div style="margin-top:8px;display:flex;gap:6px;"><button class="btn btn-sm btn-default" onclick="editWm(' + idx + ')">✏️</button><button class="btn btn-sm btn-danger" onclick="deleteWm(' + idx + ')">🗑️</button></div></div>'; }).join("") + '</div>') + '<div style="margin-top:16px;"><button class="btn btn-primary" onclick="editWm(-1)">➕ 添加水印</button></div></div><div id="wmEditArea" class="card hidden"><div class="card-title" id="wmEditTitle">添加水印</div><input type="hidden" id="wmEditIdx" value="-1" /><div class="form-row"><div class="form-group"><label>名称</label><input type="text" id="wmName" /></div><div class="form-group"><label>位置</label><select id="wmPosition" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;"><option value="bottom-right">右下角</option><option value="bottom-left">左下角</option><option value="top-right">右上角</option><option value="top-left">左上角</option><option value="center">居中</option></select></div></div><div class="form-group"><label>图片（PNG/JPG）</label><input type="file" id="wmFile" accept="image/*" /></div><div id="wmPreview" style="display:none;margin:8px 0;"><img id="wmPreviewImg" style="max-height:60px;border-radius:4px;" /></div><div class="form-row-3"><div class="form-group"><label>大小: <span id="wmSizeV">15</span>%</label><input type="range" id="wmSize" min="5" max="50" value="15" oninput="document.getElementById(\'wmSizeV\').textContent=this.value" style="width:100%;" /></div><div class="form-group"><label>透明度: <span id="wmOpacityV">60</span>%</label><input type="range" id="wmOpacity" min="10" max="100" value="60" oninput="document.getElementById(\'wmOpacityV\').textContent=this.value" style="width:100%;" /></div><div class="form-group"><label>边距: <span id="wmPaddingV">2</span>%</label><input type="range" id="wmPadding" min="0" max="15" value="2" oninput="document.getElementById(\'wmPaddingV\').textContent=this.value" style="width:100%;" /></div></div><div id="wmAlert" style="margin-top:8px;"></div><div style="display:flex;gap:8px;margin-top:16px;"><button class="btn btn-primary" onclick="saveWm()">💾 保存</button><button class="btn btn-default" onclick="document.getElementById(\'wmEditArea\').classList.add(\'hidden\')">取消</button></div></div>';
+    var wmFileEl = document.getElementById("wmFile");
+    if (wmFileEl) {
+      wmFileEl.addEventListener("change", function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          document.getElementById("wmPreview").style.display = "block";
+          document.getElementById("wmPreviewImg").src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  });
+}
+
+function editWm(idx) {
+  document.getElementById("wmEditArea").classList.remove("hidden");
+  document.getElementById("wmEditIdx").value = idx;
+  if (idx >= 0 && window._wmList && window._wmList[idx]) {
+    var wm = window._wmList[idx];
+    document.getElementById("wmEditTitle").textContent = "✏️ 编辑水印";
+    document.getElementById("wmName").value = wm.name || "";
+    document.getElementById("wmPosition").value = wm.position || "bottom-right";
+    document.getElementById("wmSize").value = wm.size || 15;
+    document.getElementById("wmSizeV").textContent = wm.size || 15;
+    document.getElementById("wmOpacity").value = wm.opacity || 60;
+    document.getElementById("wmOpacityV").textContent = wm.opacity || 60;
+    var pd = (wm.padding !== undefined && wm.padding !== null) ? wm.padding : 2;
+    document.getElementById("wmPadding").value = pd;
+    document.getElementById("wmPaddingV").textContent = pd;
+    if (wm.imageBase64) {
+      document.getElementById("wmPreview").style.display = "block";
+      document.getElementById("wmPreviewImg").src = wm.imageBase64;
+    }
+  } else {
+    document.getElementById("wmEditTitle").textContent = "➕ 添加水印";
+    document.getElementById("wmName").value = "";
+    document.getElementById("wmPreview").style.display = "none";
+  }
+  document.getElementById("wmAlert").innerHTML = "";
+}
+
+function deleteWm(idx) {
+  if (!confirm("确定删除？")) return;
+  var wms = window._wmList || [];
+  wms.splice(idx, 1);
+  api("/user/update-watermark", { method: "POST", body: { watermarks: wms } }).then(function(r) {
+    if (r.code === 0) renderWatermark();
+  });
+}
+
+function saveWm() {
+  var idx = parseInt(document.getElementById("wmEditIdx").value);
+  var name = document.getElementById("wmName").value.trim();
+  var position = document.getElementById("wmPosition").value;
+  var size = parseInt(document.getElementById("wmSize").value);
+  var opacity = parseInt(document.getElementById("wmOpacity").value);
+  var padding = parseInt(document.getElementById("wmPadding").value);
+  var a = document.getElementById("wmAlert");
+  if (!name) { a.innerHTML = '<div class="alert alert-error">请填写名称</div>'; return; }
+  a.innerHTML = '<div class="alert alert-info">保存中...</div>';
+  var pi = document.getElementById("wmPreviewImg");
+  var file = document.getElementById("wmFile").files[0];
+  function doSave(img) {
+    var wms = window._wmList || [];
+    var item = {
+      id: (idx >= 0 && wms[idx]) ? wms[idx].id : Date.now().toString(36),
+      name: name, imageBase64: img, position: position,
+      size: size, opacity: opacity, padding: padding
+    };
+    if (idx >= 0 && wms[idx]) wms[idx] = item;
+    else wms.push(item);
+    api("/user/update-watermark", { method: "POST", body: { watermarks: wms } }).then(function(r) {
+      if (r.code === 0) { a.innerHTML = '<div class="alert alert-success">✅ 保存成功</div>'; setTimeout(renderWatermark, 500); }
+      else { a.innerHTML = '<div class="alert alert-error">❌ ' + escapeHtml(r.msg) + '</div>'; }
+    });
+  }
+  if (file) {
+    var reader = new FileReader();
+    reader.onload = function(e) { doSave(e.target.result); };
+    reader.readAsDataURL(file);
+  } else if (pi && pi.src && pi.src.startsWith("data:")) {
+    doSave(pi.src);
+  } else if (idx >= 0 && window._wmList[idx] && window._wmList[idx].imageBase64) {
+    doSave(window._wmList[idx].imageBase64);
+  } else {
+    a.innerHTML = '<div class="alert alert-error">请上传图片</div>';
+  }
+}
+
+function renderImageTools() {
+  document.getElementById("pageBody").innerHTML = '<div class="card"><div class="card-title">🖼️ AI图片管理</div><div class="alert alert-info" style="margin-bottom:20px;">智能图片处理工具，帮你生成Ozon爆款商品图。</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;"><div style="background:#f5f3ff;border:2px solid #a78bfa;border-radius:16px;padding:24px;text-align:center;"><div style="font-size:40px;margin-bottom:12px;">🖼️</div><div style="font-size:16px;font-weight:bold;color:#667eea;margin-bottom:8px;">AI爆款图生成</div><div style="font-size:12px;color:#666;line-height:1.6;">上传商品图或输入链接<br>AI自动生成Ozon爆款主图</div><div style="margin-top:12px;"><span class="tag tag-warning">🔧 开发中</span></div></div><div style="background:#f0fdf4;border:2px solid #86efac;border-radius:16px;padding:24px;text-align:center;"><div style="font-size:40px;margin-bottom:12px;">✨</div><div style="font-size:16px;font-weight:bold;color:#16a34a;margin-bottom:8px;">图片去水印</div><div style="font-size:12px;color:#666;line-height:1.6;">AI智能去除图片水印<br>保留商品主体内容</div><div style="margin-top:12px;"><span class="tag tag-warning">🔧 开发中</span></div></div><div style="background:#eff6ff;border:2px solid #93c5fd;border-radius:16px;padding:24px;text-align:center;"><div style="font-size:40px;margin-bottom:12px;">🔄</div><div style="font-size:16px;font-weight:bold;color:#2563eb;margin-bottom:8px;">批量图片处理</div><div style="font-size:12px;color:#666;line-height:1.6;">自动识别主图副图详情图<br>一键替换为AI爆款图</div><div style="margin-top:12px;"><span class="tag tag-warning">🔧 开发中</span></div></div></div><div class="card" style="background:#f8f9fb;"><div class="card-title" style="font-size:14px;">📋 计划功能</div><div style="line-height:2.4;font-size:14px;color:#555;"><div>① 输入1688商品链接 → 自动抓取所有图片</div><div>② AI识别每张图的类型（主图/副图/详情图/广告图）</div><div>③ 对每张图生成AI爆款替代图</div><div>④ 预览对比（原图 vs AI图）</div><div>⑤ 选择要替换的图片，一键应用</div><div>⑥ 支持去水印、背景替换、风格转换</div></div></div></div>';
+}
+
+function renderAdmin() {
+  if (!currentUser || currentUser.role !== "admin") {
+    document.getElementById("pageBody").innerHTML = '<div class="alert alert-error">无权限</div>';
+    return;
+  }
+  var body = document.getElementById("pageBody");
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">加载中...</div>';
+  api("/user/list").then(function(d) {
+    var users = d.data || [];
+    body.innerHTML = '<div class="card"><div class="card-title">👥 用户管理</div><div class="card" style="background:#f8f9fb;margin-bottom:16px;"><div class="card-title" style="font-size:14px;">🔑 邀请码设置</div><div style="display:flex;gap:10px;align-items:flex-end;"><div class="form-group" style="flex:1;margin:0;"><label>邀请码（留空不限制）</label><input type="text" id="inviteCode" placeholder="不填则允许任何人注册" /></div><button class="btn btn-default" onclick="setInviteCode()">保存</button></div><div id="inviteAlert" style="margin-top:8px;"></div></div><div class="table-wrap"><table><thead><tr><th>用户名</th><th>角色</th><th>店铺数</th><th>注册时间</th><th>操作</th></tr></thead><tbody>' + users.map(function(u) { return '<tr><td><b>' + escapeHtml(u.username) + '</b></td><td>' + (u.role === "admin" ? '<span class="tag tag-admin">管理员</span>' : '<span class="tag tag-user">用户</span>') + '</td><td>' + (u.storeCount || 0) + '</td><td style="font-size:12px;color:#999;">' + (u.createdAt || "").slice(0, 10) + '</td><td>' + (u.id === currentUser.id ? '<span style="font-size:12px;color:#999;">当前用户</span>' : '<button class="btn btn-sm btn-default" style="margin-right:4px;" onclick="setRole(\'' + u.id + '\',\'' + (u.role === "admin" ? "user" : "admin") + '\')">' + (u.role === "admin" ? "降为用户" : "升为管理员") + '</button><button class="btn btn-sm btn-danger" onclick="deleteUser(\'' + u.id + '\',\'' + escapeHtml(u.username) + '\')">删除</button>') + '</td></tr>'; }).join("") + '</tbody></table></div></div>';
+  });
+}
+
+function setInviteCode() {
+  var c = document.getElementById("inviteCode").value.trim();
+  api("/admin/set-invite-code", { method: "POST", body: { inviteCode: c } }).then(function(d) {
+    document.getElementById("inviteAlert").innerHTML = d.code === 0 ? '<div class="alert alert-success">✅ 设置成功</div>' : '<div class="alert alert-error">❌ ' + escapeHtml(d.msg) + '</div>';
+  });
+}
+
+function setRole(id, role) {
+  if (!confirm("确定修改角色？")) return;
+  api("/user/set-role", { method: "POST", body: { userId: id, role: role } }).then(function(d) {
+    if (d.code === 0) renderAdmin();
+  });
+}
+
+function deleteUser(id, name) {
+  if (!confirm("确定删除用户「" + name + "」？")) return;
+  api("/user/delete", { method: "POST", body: { userId: id } }).then(function(d) {
+    if (d.code === 0) renderAdmin();
+  });
+}
+
+function renderDownload() {
+  document.getElementById("pageBody").innerHTML = '<div class="card"><div class="card-title">📦 下载插件</div><div class="alert alert-info" style="margin-bottom:20px;">安装Chrome插件后，在1688商品页直接一键AI上品到Ozon。</div><div style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:2px solid #a78bfa;border-radius:16px;padding:32px;text-align:center;margin-bottom:20px;"><div style="font-size:56px;margin-bottom:16px;">🤖</div><div style="font-size:22px;font-weight:bold;color:#667eea;margin-bottom:8px;">超维 ERP 插件</div><div style="font-size:14px;color:#666;margin-bottom:24px;">AI自动上品 · 1688 → Ozon</div><button class="btn btn-primary" style="padding:14px 48px;font-size:16px;" onclick="window.location.href=\'' + API_URL + '/erp/download-plugin\'">⬇️ 下载插件</button></div><div class="card" style="background:#f8f9fb;"><div class="card-title" style="font-size:14px;">📋 安装步骤</div><div style="line-height:2.4;font-size:14px;color:#555;"><div>① 下载 <b>超维erp.zip</b> 文件</div><div>② 解压到任意文件夹</div><div>③ 打开 Chrome 浏览器，地址栏输入 <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">chrome://extensions</code></div><div>④ 开启右上角 <b>开发者模式</b></div><div>⑤ 点击 <b>加载已解压的扩展程序</b>，选择解压后的文件夹</div><div>⑥ 安装完成 🎉</div></div></div><div class="card" style="background:#f8f9fb;"><div class="card-title" style="font-size:14px;">🚀 使用方法</div><div style="line-height:2.4;font-size:14px;color:#555;"><div>① 在此后台配置好 <b>Ozon 店铺</b>（Client ID + API Key）</div><div>② 打开 1688 任意商品页面</div><div>③ 点击页面右侧悬浮的 <b>「🤖 AI上品」</b> 按钮</div><div>④ 设置价格倍数，选择店铺，点击 <b>开始 AI 上品</b></div><div>⑤ 全自动处理：获取重量 → AI翻译 → 生成爆款图 → 上传Ozon</div><div>⑥ 在后台 <b>上品任务</b> 页面查看实时进度</div></div></div></div>';
+}
+
+var ozonCategoriesTree = {};
+var ozonCategoriesFlatList = [];
+
+async function loadOzonCategoriesFromGithub() {
+  if (ozonCategoriesFlatList.length > 0) return;
+  var container = document.getElementById("ap-cat-tree-container");
+  if (!container) return;
+  container.innerHTML = '<div style="color:#667eea;font-size:12px;padding:10px;">⏳ 正在加载类目树...</div>';
+  
+  var urls = [
+    "https://cdn.jsdelivr.net/gh/qq155630/leimu@main/ozon_%E7%9C%9F%E5%AE%9E%E4%BD%A3%E9%87%91_%E5%AE%8C%E6%95%B4%E7%89%88%20-%20%E5%89%AF%E6%9C%AC.TSV",
+    "https://raw.githubusercontent.com/qq155630/leimu/main/ozon_%E7%9C%9F%E5%AE%9E%E4%BD%A3%E9%87%91_%E5%AE%8C%E6%95%B4%E7%89%88%20-%20%E5%89%AF%E6%9C%AC.TSV"
+  ];
+  
+  var text = null;
+  
+  for (var i = 0; i < urls.length; i++) {
+    try {
+      console.log("🔄 加载链接 " + (i + 1));
+      var res = await fetch(urls[i]);
+      if (!res.ok) continue;
+      
+      var buffer = await res.arrayBuffer();
+      console.log("✅ 文件大小:", buffer.byteLength);
+      
+      // 尝试多种编码
+      var decoders = ["utf-8", "gbk", "gb2312", "big5"];
+      var validText = null;
+      
+      for (var d = 0; d < decoders.length; d++) {
+        try {
+          var decoder = new TextDecoder(decoders[d], { fatal: false });
+          var decoded = decoder.decode(buffer);
+          var sample = decoded.substring(0, 200);
+          var chineseCount = (sample.match(/[\u4e00-\u9fa5]/g) || []).length;
+          
+          if (chineseCount > 5) {
+            console.log("✅ 使用编码:", decoders[d]);
+            validText = decoded;
+            break;
+          }
+        } catch(e) {}
+      }
+      
+      if (validText) {
+        text = validText;
+        break;
+      }
+    } catch(e) {
+      console.warn("链接失败:", e.message);
+    }
+  }
+  
+  if (!text) {
+    container.innerHTML = '<div style="color:red;">❌ 加载失败</div>';
+    return;
+  }
+  
+  // 自动检测分隔符
+  var firstLine = text.split(/\r?\n/)[0];
+  var separator = "\t";
+  if (firstLine.indexOf("\t") === -1 && firstLine.indexOf(",") > 0) {
+    separator = ",";
+  }
+  
+  var lines = text.split(/\r?\n/).filter(Boolean);
+  lines.shift(); // 跳过表头
+  
+  var tree = {};
+  var flatList = [];
+  var skipCount = 0;
+  
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var cols = line.split(separator);
+    
+    if (cols.length < 5) {
+      skipCount++;
+      continue;
+    }
+    
+    var c1 = (cols[0] || "").trim();
+    var c2 = (cols[1] || "").trim();
+    var c3 = (cols[2] || "").trim();
+    var catId = (cols[3] || "").trim();
+    var typeId = (cols[4] || "").trim();
+    
+    // ⭐ 严格的数据验证
+    // 跳过空的或异常的类目名
+    if (!c1 || c1.length < 1 || c1.length > 50) { skipCount++; continue; }
+    if (c1 === '"' || c1 === "''" || c1 === "-") { skipCount++; continue; }
+    if (!c2 || c2.length > 50) { skipCount++; continue; }
+    
+    // 跳过 ID 异常的
+    if (!catId || !typeId) { skipCount++; continue; }
+    if (catId.length < 3 || typeId.length < 3) { skipCount++; continue; }
+    if (!/^\d+$/.test(catId) || !/^\d+$/.test(typeId)) { skipCount++; continue; }
+    
+    // 名称检查
+    var name = c3 || c2;
+    if (!name || name.length < 1 || name.length > 100) { skipCount++; continue; }
+    
+    if (!tree[c1]) tree[c1] = {};
+    if (!tree[c1][c2]) tree[c1][c2] = [];
+    
+    tree[c1][c2].push({ name: name, c1: c1, c2: c2, c3: c3, categoryId: catId, typeId: typeId });
+    flatList.push({ name: name, c1: c1, c2: c2, c3: c3, categoryId: catId, typeId: typeId });
+  }
+  
+  console.log("📊 有效条数:", flatList.length, "跳过:", skipCount);
+  
+  if (flatList.length === 0) {
+    container.innerHTML = '<div style="color:red;">❌ 解析失败</div>';
+    return;
+  }
+  
+  ozonCategoriesTree = tree;
+  ozonCategoriesFlatList = flatList;
+  console.log("✅ 成功加载", flatList.length, "个类目");
+  renderCategoryTreeUI();
+}
+
+function renderCategoryTreeUI() {
+  var container = document.getElementById("ap-cat-tree-container");
+  if (!container) return;
+  var html = '<div style="max-height:320px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:#fafafa;">';
+  for (var c1 in ozonCategoriesTree) {
+    html += '<details style="margin-bottom:4px;"><summary style="cursor:pointer;font-weight:bold;font-size:13px;color:#333;padding:4px 0;outline:none;">📁 ' + escapeHtml(c1) + '</summary><div style="padding-left:14px;margin-top:4px;">';
+    for (var c2 in ozonCategoriesTree[c1]) {
+      html += '<details style="margin-bottom:3px;"><summary style="cursor:pointer;font-weight:600;font-size:12px;color:#555;padding:3px 0;outline:none;">📂 ' + escapeHtml(c2) + '</summary><div style="padding-left:14px;margin-top:2px;">';
+      ozonCategoriesTree[c1][c2].forEach(function(item) {
+        var val = item.name + "|" + item.categoryId + "|" + item.typeId;
+        html += '<label style="display:block;font-size:12px;color:#444;margin-bottom:3px;cursor:pointer;padding:2px 0;"><input type="checkbox" class="ap-cat-leaf" value="' + escapeHtml(val) + '" style="margin-right:6px;">' + escapeHtml(item.name) + '</label>';
+      });
+      html += '</div></details>';
+    }
+    html += '</div></details>';
+  }
+  html += '</div><div style="font-size:11px;color:#999;margin-top:6px;">勾选你要上品的三级类目</div><div style="margin-top:8px;display:flex;gap:8px;"><button onclick="selectAllCats(true)" class="btn btn-default btn-sm">全选</button><button onclick="selectAllCats(false)" class="btn btn-default btn-sm">全不选</button><span id="ap-cat-count" style="font-size:12px;color:#667eea;line-height:28px;"></span></div>';
+  container.innerHTML = html;
+  container.addEventListener("change", function() { updateCatCount(); });
+  updateCatCount();
+}
+
+function updateCatCount() {
+  var el = document.getElementById("ap-cat-count");
+  if (!el) return;
+  el.textContent = "已选 " + document.querySelectorAll(".ap-cat-leaf:checked").length + " / 共 " + document.querySelectorAll(".ap-cat-leaf").length + " 个类目";
+}
+
+function selectAllCats(isAll) {
+  document.querySelectorAll(".ap-cat-leaf").forEach(function(cb) { cb.checked = isAll; });
+  updateCatCount();
+}
+
+function renderAutoPick() {
+  var body = document.getElementById("pageBody");
+  var ss = "width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;";
+  body.innerHTML = '<div class="card"><div class="card-title">🎯 自动选品 · 全自动上品</div><div id="login-check-block" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="font-size:13px;font-weight:700;color:#555;">🔐 1688 登录状态</div><button onclick="check1688Login()" class="btn btn-default btn-sm" id="check-login-btn">🔍 检测</button></div><div id="login-check-result" style="font-size:12px;color:#999;" data-status="unknown">点击「检测」按钮确认1688是否已登录</div><div style="font-size:11px;color:#aaa;margin-top:6px;line-height:1.6;">自动上品需要浏览器已登录1688，才能自动联系商家询问包装重量。</div></div><div class="alert alert-info" style="font-size:12px;line-height:1.8;margin-bottom:16px;">勾选Ozon类目 → 设置价格范围 → 点开始 → 插件自动去1688搜索 → 计算价格 → 上架到Ozon。<br>💡 重量：页面有包装重量就直接用，没有就用你设置的默认值。</div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;"><div style="font-size:13px;font-weight:700;color:#555;margin-bottom:10px;">📦 选品类目</div><div id="ap-cat-tree-container"><div style="color:#999;font-size:12px;">⏳ 加载类目树...</div></div></div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;"><div style="font-size:13px;font-weight:700;color:#555;margin-bottom:10px;">🔍 选品条件</div><div class="form-row"><div class="form-group"><label>1688进价 最低（元）</label><input type="number" id="ap-min-price" placeholder="不限" style="' + ss + '" oninput="updatePricePreviewAP()"></div><div class="form-group"><label>1688进价 最高（元）</label><input type="number" id="ap-max-price" placeholder="不限" style="' + ss + '" oninput="updatePricePreviewAP()"></div></div><div class="form-group"><label>每个类目最多上品数量</label><input type="number" id="ap-max-count" value="5" min="1" max="30" style="width:120px;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;"></div></div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;"><div style="font-size:13px;font-weight:700;color:#555;margin-bottom:10px;">💰 定价设置</div><div class="form-row" style="margin-bottom:10px;"><div class="form-group"><label>目标利润率（% 最低15）</label><input type="number" id="ap-profit-rate" value="30" min="15" style="' + ss + '" oninput="updatePricePreviewAP()"></div><div class="form-group"><label>CNY → RUB 汇率</label><input type="number" id="ap-exchange-rate" value="13" step="0.1" style="' + ss + '" oninput="updatePricePreviewAP()"></div></div><div class="form-row" style="margin-bottom:10px;"><div class="form-group"><label>头程物流方式</label><select id="ap-shipping-type" style="' + ss + '" onchange="updatePricePreviewAP()"><option value="air">空运（35元/kg，7-15天）</option><option value="land">陆运（20元/kg，15-25天）</option><option value="air_land">陆空联运</option><option value="sea">海运（15元/kg，30-45天）</option></select></div><div class="form-group"><label>默认包装重量（kg）</label><input type="number" id="ap-default-weight" value="0.5" min="0.1" step="0.1" style="' + ss + '" oninput="updatePricePreviewAP()"></div></div><div id="ap-price-preview" style="background:#f0f5ff;border:1px solid #c7d2fe;border-radius:8px;padding:12px;font-size:12px;line-height:2;display:none;"></div><div style="font-size:11px;color:#888;margin-top:8px;">佣金：<b>17%</b> | Ozon物流：<b>8%</b> | 尾程收单：<b>5%</b> | 提现：<b>1.2%</b> | 贴单费：<b>¥2</b> | 价格：<b>向上取整</b></div></div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;"><div style="font-size:13px;font-weight:700;color:#555;margin-bottom:10px;">🏪 上传到哪些店铺</div><div id="ap-store-list"><span style="color:#999;font-size:12px;">⏳ 加载中...</span></div></div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:16px;"><div style="font-size:13px;font-weight:700;color:#555;margin-bottom:10px;">🤖 AI 设置</div><div class="form-row"><div class="form-group"><label>商品风格提示（可选）</label><input type="text" id="ap-style-hint" placeholder="例如：时尚女性、北欧简约、家居实用" style="' + ss + '"></div><div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:22px;"><input type="checkbox" id="ap-gen-dalle" checked style="width:16px;height:16px;"><label for="ap-gen-dalle" style="font-size:13px;cursor:pointer;">DALL-E 3 生成爆款主图</label></div></div></div><div id="ap-alert" style="margin-bottom:12px;"></div><div style="display:flex;gap:12px;"><button class="btn btn-primary" style="flex:1;padding:14px;font-size:15px;" onclick="startAutoPick()">🚀 开始自动选品上品</button><button class="btn btn-danger" style="padding:14px 20px;" onclick="stopAutoPick()">⏹ 停止</button></div></div><div class="card" id="ap-status-card" style="display:none;"><div class="card-title">📊 实时进度</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;"><div class="stat-card"><div class="label">已处理</div><div class="value" id="ap-processed" style="font-size:28px;">0</div></div><div class="stat-card"><div class="label">✅ 成功</div><div class="value" id="ap-success" style="font-size:28px;color:#52c41a;">0</div></div><div class="stat-card"><div class="label">❌ 失败</div><div class="value" id="ap-failed" style="font-size:28px;color:#ff4d4f;">0</div></div></div><div style="font-size:13px;color:#667eea;font-weight:600;margin-bottom:10px;" id="ap-current">等待开始...</div><div style="background:#f8f9fb;border-radius:8px;padding:12px;max-height:250px;overflow-y:auto;" id="ap-log"><div style="color:#999;font-size:12px;text-align:center;">暂无日志</div></div></div>';
+  api("/user/stores").then(function(d) {
+    var el = document.getElementById("ap-store-list");
+    if (!el) return;
+    var stores = d.data || [];
+    if (!stores.length) { el.innerHTML = '<span style="color:#ff4d4f;font-size:12px;">暂无店铺，请先去「店铺管理」配置</span>'; return; }
+    el.innerHTML = stores.map(function(s) {
+      return '<label style="display:inline-flex;align-items:center;gap:6px;margin-right:16px;margin-bottom:6px;font-size:13px;cursor:pointer;"><input type="checkbox" class="ap-store-cb" value="' + s.id + '" checked>' + escapeHtml(s.name) + '</label>';
+    }).join("");
+  });
+  loadOzonCategoriesFromGithub();
+  refreshAutoPickStatus();
+  window._autoPickPollingTimer = setInterval(refreshAutoPickStatus, 3000);
+  setTimeout(updatePricePreviewAP, 600);
+  setTimeout(check1688Login, 1500);
+}
+
+function check1688Login() {
+  var btn = document.getElementById("check-login-btn");
+  var resultEl = document.getElementById("login-check-result");
+  if (!resultEl) return;
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ 检测中..."; }
+  resultEl.innerHTML = '<span style="color:#667eea;">⏳ 正在检测，请稍候...</span>';
+  resultEl.dataset.status = "checking";
+  sendToExtension({ action: "check1688Login" }, function(res) {
+    if (btn) { btn.disabled = false; btn.textContent = "🔍 重新检测"; }
+    if (!res || !res.success) {
+      resultEl.innerHTML = '<span style="color:#ff4d4f;">❌ 检测失败：插件未响应</span>';
+      resultEl.dataset.status = "unknown";
+      return;
+    }
+    if (res.loggedIn) {
+      resultEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">✅</span><div><div style="color:#52c41a;font-weight:700;font-size:13px;">1688 已登录</div><div style="color:#999;font-size:11px;">' + escapeHtml(res.reason || "") + '，可以正常自动上品</div></div></div>';
+      resultEl.dataset.status = "logged";
+    } else {
+      resultEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">❌</span><div><div style="color:#ff4d4f;font-weight:700;font-size:13px;">1688 未登录</div><div style="color:#999;font-size:11px;">' + escapeHtml(res.reason || "") + '</div><div style="margin-top:6px;"><a href="https://www.1688.com" target="_blank" onclick="setTimeout(function(){check1688Login();},8000)" style="display:inline-block;padding:5px 12px;background:#ff6a00;color:#fff;border-radius:6px;font-size:12px;text-decoration:none;font-weight:600;">🔑 去登录1688</a><span style="font-size:11px;color:#aaa;margin-left:8px;">登录后8秒自动重新检测</span></div></div></div>';
+      resultEl.dataset.status = "not_logged";
+    }
+  });
+}
+
+function updatePricePreviewAP() {
+  var minPrice = parseFloat((document.getElementById("ap-min-price") || {}).value) || 0;
+  var maxPrice = parseFloat((document.getElementById("ap-max-price") || {}).value) || 0;
+  var profitRate = parseFloat((document.getElementById("ap-profit-rate") || {}).value) / 100 || 0.30;
+  if (profitRate < 0.15) profitRate = 0.15;
+  var exchangeRate = parseFloat((document.getElementById("ap-exchange-rate") || {}).value) || 13;
+  var shippingType = (document.getElementById("ap-shipping-type") || {}).value || "air";
+  var defaultWeight = parseFloat((document.getElementById("ap-default-weight") || {}).value) || 0.5;
+  var previewEl = document.getElementById("ap-price-preview");
+  if (!previewEl) return;
+  if (!minPrice && !maxPrice) { previewEl.style.display = "none"; return; }
+  var shippingCostPerKg = shippingType === "sea" ? 15 : (shippingType === "land" ? 20 : 35);
+  var shippingCost = defaultWeight * shippingCostPerKg;
+  var labelFee = 2;
+  var divisor = 1 - 0.17 - 0.08 - 0.05 - 0.012 - profitRate;
+  function calcPrice(costCny) {
+    if (!costCny || divisor <= 0) return 0;
+    return Math.ceil((costCny + shippingCost + labelFee) * exchangeRate / divisor);
+  }
+  var lines = [];
+  lines.push("按默认重量 " + defaultWeight + "kg 计算，头程运费约 ¥" + shippingCost.toFixed(1) + "/件，贴单费 ¥" + labelFee);
+  if (minPrice > 0) { var p1 = calcPrice(minPrice); lines.push("进价 ¥" + minPrice + " → 上架约 <b>" + p1 + " RUB</b> (≈¥" + Math.ceil(p1 / exchangeRate) + ")"); }
+  if (maxPrice > 0) { var p2 = calcPrice(maxPrice); lines.push("进价 ¥" + maxPrice + " → 上架约 <b>" + p2 + " RUB</b> (≈¥" + Math.ceil(p2 / exchangeRate) + ")"); }
+  lines.push("佣金17% + 物流8% + 尾程5% + 提现1.2% + 贴单¥2 + 利润" + (profitRate * 100).toFixed(0) + "%");
+  previewEl.style.display = "block";
+  previewEl.innerHTML = lines.join("<br>");
+}
+
+function refreshAutoPickStatus() {
+  sendToExtension({ action: "getAutoPickStatus" }, function(res) {
+    if (!res || !res.success) return;
+    var s = res.status || {};
+    var card = document.getElementById("ap-status-card");
+    if (card) card.style.display = "block";
+    var pe = document.getElementById("ap-processed"); if (pe) pe.textContent = s.processed || 0;
+    var se = document.getElementById("ap-success"); if (se) se.textContent = s.success || 0;
+    var fe = document.getElementById("ap-failed"); if (fe) fe.textContent = s.failed || 0;
+    var ce = document.getElementById("ap-current");
+    if (ce) {
+      if (s.running) {
+        var catInfo = s.totalCategories ? (" [" + ((s.categoryIndex || 0) + 1) + "/" + s.totalCategories + "]") : "";
+        ce.innerHTML = "⏳ " + escapeHtml(s.current || "处理中...") + catInfo;
+      } else { ce.innerHTML = "⏹ 已停止 / 已完成"; }
+    }
+    var le = document.getElementById("ap-log");
+    if (le) {
+      var logs = s.log || [];
+      if (!logs.length) { le.innerHTML = '<div style="color:#999;font-size:12px;text-align:center;">暂无日志</div>'; }
+      else {
+        le.innerHTML = logs.map(function(item) {
+          var time = "";
+          try { time = new Date(item.time).toLocaleTimeString(); } catch(e) {}
+          return '<div style="padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:12px;">[' + time + '] ' + escapeHtml(item.text) + '</div>';
+        }).join("");
+      }
+    }
+    if (!s.running && window._autoPickPollingTimer) { clearInterval(window._autoPickPollingTimer); window._autoPickPollingTimer = null; }
+  });
+}
+
+function startAutoPick() {
+  var loginResultEl = document.getElementById("login-check-result");
+  var alertEl = document.getElementById("ap-alert");
+  if (loginResultEl && loginResultEl.dataset.status === "not_logged") {
+    alertEl.innerHTML = '<div class="alert alert-error">❌ 请先登录1688！<a href="https://www.1688.com" target="_blank" style="margin-left:8px;color:#ff4d4f;font-weight:bold;">→ 去登录</a></div>';
+    return;
+  }
+  if (loginResultEl && loginResultEl.dataset.status === "unknown") {
+    alertEl.innerHTML = '<div class="alert alert-warning">⚠️ 建议先点击「检测」确认1688已登录</div>';
+  }
+  var checkedLeaves = Array.from(document.querySelectorAll(".ap-cat-leaf:checked")).map(function(cb) {
+    var parts = cb.value.split("|");
+    return { keyword: parts[0] || "", categoryId: parts[1] || "", typeId: parts[2] || "" };
+  }).filter(function(item) { return item.keyword && item.categoryId && item.typeId; });
+  var storeIds = Array.from(document.querySelectorAll(".ap-store-cb:checked")).map(function(cb) { return cb.value; });
+  if (!checkedLeaves.length) { alertEl.innerHTML = '<div class="alert alert-error">❌ 请至少勾选一个三级类目</div>'; return; }
+  if (!storeIds.length) { alertEl.innerHTML = '<div class="alert alert-error">❌ 请选择至少一个店铺</div>'; return; }
+  var minPrice = parseFloat(document.getElementById("ap-min-price").value) || 0;
+  var maxPrice = parseFloat(document.getElementById("ap-max-price").value) || 0;
+  if (maxPrice > 0 && minPrice > maxPrice) { alertEl.innerHTML = '<div class="alert alert-error">❌ 最低价不能大于最高价</div>'; return; }
+  var profitRate = Math.max(parseFloat(document.getElementById("ap-profit-rate").value) / 100 || 0.30, 0.15);
+  var exchangeRate = parseFloat(document.getElementById("ap-exchange-rate").value) || 13;
+  var shippingType = document.getElementById("ap-shipping-type").value || "air";
+  var defaultWeight = parseFloat(document.getElementById("ap-default-weight").value) || 0.5;
+  var maxCount = parseInt(document.getElementById("ap-max-count").value) || 5;
+  var styleHint = (document.getElementById("ap-style-hint").value || "").trim();
+  var genDalle = document.getElementById("ap-gen-dalle").checked;
+  alertEl.innerHTML = '<div class="alert alert-info">⏳ 正在启动，共 ' + checkedLeaves.length + ' 个类目...</div>';
+  var config = {
+    targetCategories: checkedLeaves, minPrice: minPrice, maxPrice: maxPrice,
+    maxCount: maxCount, profitRate: profitRate, exchangeRate: exchangeRate,
+    shippingType: shippingType, defaultWeight: defaultWeight,
+    styleHint: styleHint, genDalle: genDalle, storeIds: storeIds
+  };
+  sendToExtension({ action: "startAutoPickTask", config: config }, function(res) {
+    if (res && res.success) {
+      alertEl.innerHTML = '<div class="alert alert-success">✅ 已启动！插件正在后台自动处理，请勿关闭浏览器。</div>';
+      document.getElementById("ap-status-card").style.display = "block";
+      if (window._autoPickPollingTimer) clearInterval(window._autoPickPollingTimer);
+      window._autoPickPollingTimer = setInterval(refreshAutoPickStatus, 3000);
+    } else {
+      alertEl.innerHTML = '<div class="alert alert-error">❌ 启动失败：' + escapeHtml((res && res.error) || "未知错误，请确认已安装插件") + '</div>';
+    }
+  });
+}
+
+function stopAutoPick() {
+  sendToExtension({ action: "stopAutoPickTask" }, function() {
+    var alertEl = document.getElementById("ap-alert");
+    if (alertEl) alertEl.innerHTML = '<div class="alert alert-warning">⏹ 任务已停止</div>';
+    if (window._autoPickPollingTimer) { clearInterval(window._autoPickPollingTimer); window._autoPickPollingTimer = null; }
+    setTimeout(refreshAutoPickStatus, 500);
+  });
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.key !== "Enter") return;
+  if (!document.getElementById("loginForm").classList.contains("hidden")) doLogin();
+  else if (!document.getElementById("registerForm").classList.contains("hidden")) doRegister();
+});
+
+if (currentToken) {
+  loadUser().then(function() { if (currentUser) showMain(); }).catch(function() {
+    localStorage.removeItem("erp_token");
+    currentToken = null;
+  });
+}
+</script>
+
+</body>
+</html>
